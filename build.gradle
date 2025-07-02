@@ -1,0 +1,113 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "$springBootVersion"
+    id 'io.spring.dependency-management' version "$springManagementVersion"
+    id 'com.epages.restdocs-api-spec' version "${epagesRestDocsVersion}"
+    id "org.asciidoctor.jvm.convert" version "3.3.2"
+}
+
+group = "com.boilerplate"
+version = "0.0.1-SNAPSHOT"
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    configureEach {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.apache.logging.log4j') {
+                details.useVersion '2.15.0'
+            }
+        }
+    }
+    asciidoctorExt
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Core
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis"
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+    
+    // Testing
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.security:spring-security-test"
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.0'
+    testImplementation 'org.testcontainers:mysql:1.20.0'
+    testImplementation 'com.h2database:h2'
+
+    // Database
+    implementation "org.flywaydb:flyway-core:${flywayVersion}"
+    implementation "org.flywaydb:flyway-mysql:${flywayVersion}"
+    runtimeOnly "com.mysql:mysql-connector-j"
+    
+    // Spring Data Envers for Auditing
+    implementation 'org.springframework.data:spring-data-envers'
+
+    // QueryDSL
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok"
+    annotationProcessor "org.projectlombok:lombok"
+
+    // JWT
+    implementation "io.jsonwebtoken:jjwt-api:0.12.5"
+    implementation "io.jsonwebtoken:jjwt-impl:0.12.5"
+    implementation "io.jsonwebtoken:jjwt-jackson:0.12.5"
+
+    // Utilities
+    implementation "org.apache.commons:commons-csv:1.9.0"
+    implementation "org.apache.commons:commons-lang3:3.12.0"
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation "org.json:json:20231013"
+    
+    // Monitoring
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    
+    // Documentation
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    implementation("com.epages:restdocs-api-spec-mockmvc:${epagesRestDocsVersion}")
+    testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc"
+    testImplementation "com.github.Steppschuh:Java-Markdown-Generator:master-SNAPSHOT"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+test {
+    useJUnitPlatform()
+    outputs.dir snippetsDir
+    maxHeapSize = "2048m"
+}
+
+
+// OpenAPI3 configuration
+openapi3 {
+    title = 'Spring Boot Boilerplate API'
+    description = 'Spring Boot Boilerplate API Documentation'
+    format = 'json'
+    outputFileNamePrefix = "api"
+}
